@@ -327,12 +327,59 @@ body{
 .note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
 .brand-footer{
   text-align:center;
-  color:#727c85;
+  color:#184f7d;
   font-size:10px;
   font-weight:760;
   margin:13px 0 2px;
   letter-spacing:.09em;
   text-transform:uppercase;
+  cursor:pointer;
+  user-select:none;
+}
+.easter-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(10,22,34,.76);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  z-index:9999;
+}
+.easter-card{
+  width:min(100%,760px);
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 18px 60px rgba(0,0,0,.34);
+}
+.easter-card img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.easter-copy{
+  padding:16px 18px 18px;
+}
+.easter-copy h3{
+  margin:0 0 6px;
+  font-size:21px;
+}
+.easter-copy p{
+  margin:6px 0;
+  color:#5f6973;
+  line-height:1.45;
+  font-size:13px;
+}
+.easter-close{
+  margin-top:12px;
+  width:100%;
+  border:0;
+  border-radius:10px;
+  padding:11px 14px;
+  background:#184f7d;
+  color:#fff;
+  font-weight:760;
 }
 .utility{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .status{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5}
@@ -416,7 +463,7 @@ body{
     <strong id="itemCount">0 items saved</strong>
     <div class="note">Stored privately in this browser.</div>
   </div>
-  <div class="brand-footer">DONCO-BAYCITY™</div>
+  <div class="brand-footer" onclick="openEasterEgg()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){openEasterEgg()}">A DONCO-BAYCITY App</div>
 </section>
 
 <section id="addView" class="hidden">
@@ -521,11 +568,30 @@ body{
 
 </div>
 
+<div id="easterEgg" class="easter-overlay hidden" onclick="if(event.target===this)closeEasterEgg()">
+  <div class="easter-card" role="dialog" aria-modal="true" aria-label="Bay City Easter egg">
+    <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Baycityatdusk.jpg" alt="Bay City at dusk from Veterans Memorial Park">
+    <div class="easter-copy">
+      <h3>Veterans Memorial Park · Bay City, Michigan</h3>
+      <p>A little Bay City surprise from DONCO-BAYCITY.</p>
+      <p>Photo: “Baycityatdusk.jpg” by Asher196, via Wikimedia Commons. Licensed CC BY-SA 3.0.</p>
+      <button class="easter-close" type="button" onclick="closeEasterEgg()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const KEY="whereDidIPutIt_items_v1";
 let pendingPhoto="";
 let pendingEditPhoto="";
 let removeExistingPhoto=false;
+
+function openEasterEgg(){
+  document.getElementById("easterEgg").classList.remove("hidden");
+}
+function closeEasterEgg(){
+  document.getElementById("easterEgg").classList.add("hidden");
+}
 
 function getItems(){
   try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}
