@@ -1,6 +1,6 @@
 workflows:
-  where-did-i-put-it-testflight:
-    name: Where Did I Put It TestFlight
+  itemkeeper-testflight:
+    name: ItemKeeper TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m2
 
@@ -16,7 +16,7 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: "com.donaldreckman.wheredidiputit"
-        APP_NAME: "Where Did I Put It?"
+        APP_NAME: "ItemKeeper"
 
     scripts:
       - name: Create iOS project
@@ -29,11 +29,12 @@ workflows:
           rm -rf www ios
           mkdir -p www
           cp index.html www/index.html
+          cp donco-baycity-logo-correct.jpg www/donco-baycity-logo-correct.jpg
 
           cat > capacitor.config.json <<'EOF'
           {
             "appId": "com.donaldreckman.wheredidiputit",
-            "appName": "Where Did I Put It?",
+            "appName": "ItemKeeper",
             "webDir": "www"
           }
           EOF
@@ -43,11 +44,11 @@ workflows:
 
           PLIST="ios/App/App/Info.plist"
 
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string Where Did I Put It? uses the camera when you choose to photograph an item." "$PLIST" || \
-          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription Where Did I Put It? uses the camera when you choose to photograph an item." "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string ItemKeeper uses the camera when you choose to photograph an item." "$PLIST" || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription ItemKeeper uses the camera when you choose to photograph an item." "$PLIST"
 
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string Where Did I Put It? lets you choose a photo to help identify a saved item." "$PLIST" || \
-          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription Where Did I Put It? lets you choose a photo to help identify a saved item." "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string ItemKeeper lets you choose a photo to help identify a saved item." "$PLIST" || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription ItemKeeper lets you choose a photo to help identify a saved item." "$PLIST"
 
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || \
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
