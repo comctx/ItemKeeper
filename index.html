@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
-<title>Where Did I Put It? · DONCO-BAYCITY™</title>
+<title>ItemKeeper · DONCO-BAYCITY™</title>
 <style>
 :root{
   --bg:#f6f5f1;
@@ -171,7 +171,6 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .homebtn:last-child{border-bottom:0}
 .homebtn:hover{background:#fafbfc}
 
-/* Fun color accents for the main actions */
 .homebtn:nth-child(1) .nav-icon{
   background:#e8f7ee;
   color:#1f7a4d;
@@ -370,7 +369,7 @@ body{
 <section id="homeView">
   <div class="hero">
     <p class="section-kicker">Personal item locator</p>
-    <h1>Where Did I Put It?</h1>
+    <h1>ItemKeeper</h1>
     <p class="lead">Keep a simple record of where things are stored, then find them when you need them.</p>
   </div>
 
@@ -611,7 +610,7 @@ function showBackup(){
 }
 function downloadBackup(){
   const data={
-    app:"Where Did I Put It?",
+    app:"ItemKeeper",
     version:1,
     exportedAt:new Date().toISOString(),
     items:getItems()
@@ -622,7 +621,7 @@ function downloadBackup(){
   const d=new Date();
   const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   a.href=url;
-  a.download="where-did-i-put-it-backup-"+stamp+".json";
+  a.download="itemkeeper-backup-"+stamp+".json";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -640,7 +639,7 @@ async function restoreBackup(){
     return;
   }
   const items=Array.isArray(data)?data:data&&Array.isArray(data.items)?data.items:null;
-  if(!items){alert("That file is not a Where Did I Put It? backup.");return}
+  if(!items){alert("That file is not an ItemKeeper backup.");return}
   const valid=items.every(i=>i&&typeof i==="object"&&typeof i.name==="string"&&typeof i.location==="string");
   if(!valid){alert("That backup file is damaged or incomplete.");return}
   if(!confirm("Restore this backup? This will replace the items currently saved in this browser."))return;
