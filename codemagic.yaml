@@ -24,7 +24,7 @@ workflows:
           set -eu
 
           npm init -y
-          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/ios@latest
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/ios@latest @capacitor/filesystem@latest @capacitor/share@latest
 
           rm -rf www ios
           mkdir -p www
