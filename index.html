@@ -512,6 +512,8 @@ body{
     <h3 style="margin-top:0">Backup your saved items</h3>
     <p class="status">Download a backup file that includes your item names, locations, notes, and saved photos.</p>
     <button class="btn primary" type="button" onclick="downloadBackup()">Download Backup</button>
+    <p id="backupStatus" class="status" role="status" aria-live="polite"></p>
+    <p class="note">Backup files are not encrypted. Anyone with the file can read its contents. Keep it in a trusted location.</p>
   </div>
   <div class="card">
     <h3 style="margin-top:0">Restore from a backup</h3>
@@ -608,9 +610,17 @@ function closeEasterEgg(){
 }
 
 function getItems(){
-  try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}
+  try{
+    const items=JSON.parse(localStorage.getItem(KEY)||"[]");
+    if(!Array.isArray(items))throw new Error("Invalid records");
+    return items;
+  }catch(e){
+    alert("Saved items could not be read. Your original data has been kept. Do not uninstall the app. Contact support before making changes.");
+    throw e;
+  }
 }
 function setItems(items){
+  getItems(); // Refuse to overwrite unreadable existing records.
   localStorage.setItem(KEY,JSON.stringify(items));
   updateCount();
 }
@@ -659,7 +669,7 @@ function itemCardHtml(i){
   return `
     <div class="item">
       <div class="itemrow">
-        ${i.photo?`<img class="thumb" src="${i.photo}" alt="">`:`<div class="thumb" style="display:grid;place-items:center;font-size:16px;font-weight:800;color:#7a858f">ITEM</div>`}
+        ${i.photo?`<img class="thumb" src="${escapeHtml(i.photo)}" alt="">`:`<div class="thumb" style="display:grid;place-items:center;font-size:16px;font-weight:800;color:#7a858f">ITEM</div>`}
         <div style="min-width:0;flex:1">
           <h3>${escapeHtml(i.name)}</h3>
           <div class="loc"><span class="location-label">Location</span>${escapeHtml(i.location)}${i.spot?" — "+escapeHtml(i.spot):""}</div>
@@ -692,24 +702,38 @@ function showBackup(){
   document.getElementById("restoreMessage").classList.add("hidden");
   showView("backupView");
 }
-function downloadBackup(){
-  const data={
-    app:"ItemKeeper",
-    version:1,
-    exportedAt:new Date().toISOString(),
-    items:getItems()
-  };
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  const d=new Date();
-  const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  a.href=url;
-  a.download="itemkeeper-backup-"+stamp+".json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+let backupBusy=false;
+async function downloadBackup(){
+  if(backupBusy)return;
+  backupBusy=true;
+  const status=document.getElementById("backupStatus");
+  status.textContent="Preparing backup…";
+  try{
+    const data=JSON.stringify({app:"ItemKeeper",version:1,exportedAt:new Date().toISOString(),items:getItems()},null,2);
+    const filename="itemkeeper-backup-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";
+    if(window.Capacitor && Capacitor.isNativePlatform()){
+      const fs=Capacitor.registerPlugin("Filesystem");
+      const share=Capacitor.registerPlugin("Share");
+      const file=await fs.writeFile({path:filename,data,directory:"CACHE",encoding:"utf8"});
+      status.textContent="Choose Save to Files in the sharing window to keep your backup.";
+      await share.share({title:"ItemKeeper Backup",files:[file.uri],dialogTitle:"Save your backup"});
+      status.textContent="Sharing window closed. Check Files for your backup; closing the window alone does not confirm it was saved.";
+    }else{
+      const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+      const a=document.createElement("a");
+      a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      status.textContent="Download requested. Check your downloads for the backup file.";
+    }
+  }catch(e){
+    status.textContent=/cancel|dismiss/i.test(String(e && e.message))?"Backup sharing canceled. Your items are unchanged.":"Backup could not be exported. Your items are unchanged. Please try again.";
+  }finally{backupBusy=false;}
+}
+function validBackupItem(i){
+  return i && typeof i==="object" && typeof i.name==="string" && typeof i.location==="string" &&
+    ["spot","notes","id"].every(k=>i[k]===undefined || typeof i[k]==="string") &&
+    (i.id===undefined || /^[A-Za-z0-9_-]{1,128}$/.test(i.id)) &&
+    (i.photo===undefined || i.photo==="" || (typeof i.photo==="string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(i.photo)));
 }
 async function restoreBackup(){
   const input=document.getElementById("restoreFile");
@@ -724,7 +748,7 @@ async function restoreBackup(){
   }
   const items=Array.isArray(data)?data:data&&Array.isArray(data.items)?data.items:null;
   if(!items){alert("That file is not an ItemKeeper backup.");return}
-  const valid=items.every(i=>i&&typeof i==="object"&&typeof i.name==="string"&&typeof i.location==="string");
+  const valid=items.every(validBackupItem) && new Set(items.filter(i=>i.id).map(i=>i.id)).size===items.filter(i=>i.id).length;
   if(!valid){alert("That backup file is damaged or incomplete.");return}
   if(!confirm("Restore this backup? This will replace the items currently saved in this browser."))return;
   const restored=items.map((i,n)=>({
